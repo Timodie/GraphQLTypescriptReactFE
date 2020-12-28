@@ -11,7 +11,9 @@ import {
 import Wrapper from '../components/Wrapper';
 import InputField from '../components/InputField';
 import { useMutation } from 'urql';
-
+import { useRegisterMutation } from '../generated/graphql';
+import { toErrorMap } from '../utils/toErrorMap'
+import { NextRouter, useRouter } from 'next/router';
 interface registerProps {}
 
 const REGISTER_MUTATION = `
@@ -30,14 +32,25 @@ mutation Register ($username: String!, $password:String!) {
 `;
 
 const Register: React.FC<registerProps> = ({}) => {
-  const [, register] = useMutation(REGISTER_MUTATION);
+  const [, register] = useRegisterMutation();
+  const router: NextRouter = useRouter();
   return (
     <Wrapper variant="small">
       <Formik
         initialValues={{ username: '', password: '' }}
-        onSubmit={(values) => {
+        onSubmit={async (values, {setErrors} ) => {
           console.log(values);
-          return register(values); // resolved promise
+          const response =  await register(values); // setup response types using graphql codegen
+          if (response.data?.register.errors) {
+              setErrors(
+                 toErrorMap(response.data.register.errors)
+              )
+        } else if (!response.data?.register.errors) {
+            // successful registration
+            console.log("SUCCESS pushing route")
+            router.push("/")
+        }
+          return response
         }}
       >
         {({ values, handleChange, isSubmitting }) => (
