@@ -1,7 +1,17 @@
 import { ChakraProvider, ColorModeProvider } from '@chakra-ui/react';
-import { cacheExchange,Cache, QueryInput, query } from '@urql/exchange-graphcache';
+import {
+  cacheExchange,
+  Cache,
+  QueryInput,
+  query
+} from '@urql/exchange-graphcache';
 import { createClient, dedupExchange, fetchExchange, Provider } from 'urql';
-import { LoginMutation, MeDocument, MeQuery, RegisterMutation } from '../generated/graphql';
+import {
+  LoginMutation,
+  MeDocument,
+  MeQuery,
+  RegisterMutation
+} from '../generated/graphql';
 
 import theme from '../theme';
 
@@ -16,13 +26,15 @@ function betterUpdateQuery<Result, Query>(
 
 const client = createClient({
   url: 'http://localhost:4000/graphql',
-  exchanges: [dedupExchange, cacheExchange({
-    updates: {
-      Mutation: {
-        login:(_result, args, cache, info) => {
+  exchanges: [
+    dedupExchange,
+    cacheExchange({
+      updates: {
+        Mutation: {
+          login: (_result, args, cache, info) => {
             betterUpdateQuery<LoginMutation, MeQuery>(
-              cache, 
-              {query: MeDocument}, 
+              cache,
+              { query: MeDocument },
               _result,
               (result, query) => {
                 if (result.login.errors) {
@@ -30,15 +42,15 @@ const client = createClient({
                 } else {
                   return {
                     me: result.login.user
-                  }
+                  };
                 }
-              })
-   
-        },
-         register:(_result, args, cache, info) => {
+              }
+            );
+          },
+          register: (_result, args, cache, info) => {
             betterUpdateQuery<RegisterMutation, MeQuery>(
-              cache, 
-              {query: MeDocument}, 
+              cache,
+              { query: MeDocument },
               _result,
               (result, query) => {
                 if (result.register.errors) {
@@ -46,14 +58,16 @@ const client = createClient({
                 } else {
                   return {
                     me: result.register.user
-                  }
+                  };
                 }
-              })
-   
-        },
+              }
+            );
+          }
+        }
       }
-    }
-  }), fetchExchange],
+    }),
+    fetchExchange
+  ],
   fetchOptions: {
     credentials: 'include'
   }
